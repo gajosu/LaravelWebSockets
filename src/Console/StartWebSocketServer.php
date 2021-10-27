@@ -2,23 +2,24 @@
 
 namespace Gajosu\LaravelWebSockets\Console;
 
-use Gajosu\LaravelWebSockets\Facades\StatisticsLogger;
-use Gajosu\LaravelWebSockets\Facades\WebSocketsRouter;
-use Gajosu\LaravelWebSockets\Server\Logger\ConnectionLogger;
-use Gajosu\LaravelWebSockets\Server\Logger\HttpLogger;
-use Gajosu\LaravelWebSockets\Server\Logger\WebsocketsLogger;
-use Gajosu\LaravelWebSockets\Server\WebSocketServerFactory;
-use Gajosu\LaravelWebSockets\Statistics\DnsResolver;
-use Gajosu\LaravelWebSockets\Statistics\Logger\StatisticsLogger as StatisticsLoggerInterface;
-use Gajosu\LaravelWebSockets\WebSockets\Channels\ChannelManager;
+use React\Http\Browser;
+use React\Socket\Connector;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use React\Dns\Config\Config as DnsConfig;
-use React\Dns\Resolver\Factory as DnsFactory;
 use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\Factory as LoopFactory;
-use React\Http\Browser;
-use React\Socket\Connector;
+use React\Dns\Resolver\Factory as DnsFactory;
+use Gajosu\LaravelWebSockets\Events\ServerStarted;
+use Gajosu\LaravelWebSockets\Statistics\DnsResolver;
+use Gajosu\LaravelWebSockets\Facades\StatisticsLogger;
+use Gajosu\LaravelWebSockets\Facades\WebSocketsRouter;
+use Gajosu\LaravelWebSockets\Server\Logger\HttpLogger;
+use Gajosu\LaravelWebSockets\Server\WebSocketServerFactory;
+use Gajosu\LaravelWebSockets\Server\Logger\ConnectionLogger;
+use Gajosu\LaravelWebSockets\Server\Logger\WebsocketsLogger;
+use Gajosu\LaravelWebSockets\WebSockets\Channels\ChannelManager;
+use Gajosu\LaravelWebSockets\Statistics\Logger\StatisticsLogger as StatisticsLoggerInterface;
 
 class StartWebSocketServer extends Command
 {
@@ -142,6 +143,8 @@ class StartWebSocketServer extends Command
     {
         $this->info("Starting the WebSocket server on port {$this->option('port')}...");
 
+        ServerStarted::dispatch();
+
         $routes = WebSocketsRouter::getRoutes();
 
         /* 🛰 Start the server 🛰  */
@@ -153,6 +156,7 @@ class StartWebSocketServer extends Command
             ->setConsoleOutput($this->output)
             ->createServer()
             ->run();
+
     }
 
     protected function getDnsResolver(): ResolverInterface
